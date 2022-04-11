@@ -1,5 +1,13 @@
 import { EthrDID } from 'ethr-did'
-import { Issuer, JwtCredentialPayload, createVerifiableCredentialJwt, verifyCredential } from 'did-jwt-vc'
+import {
+    Issuer,
+    JwtCredentialPayload,
+    createVerifiableCredentialJwt,
+    verifyCredential,
+    JwtPresentationPayload,
+    createVerifiablePresentationJwt,
+    verifyPresentation
+} from 'did-jwt-vc'
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -22,6 +30,7 @@ const vcPayload: JwtCredentialPayload = {
     }
 }
 
+
 import { Resolver } from 'did-resolver'
 import { getResolver } from 'ethr-did-resolver'
 
@@ -41,8 +50,22 @@ const resolver = new Resolver(getResolver(providerConfig))
 const main = async () => {
     const vcJwt = await createVerifiableCredentialJwt(vcPayload, issuer)
     console.log("vcJwt: ", vcJwt);
+    const vpPayload: JwtPresentationPayload = {
+        vp: {
+            '@context': ['https://www.w3.org/2018/credentials/v1'],
+            type: ['VerifiablePresentation'],
+            verifiableCredential: [vcJwt]
+        }
+    }
+    const vpJwt = await createVerifiablePresentationJwt(vpPayload, issuer)
+    console.log(vpJwt)
+
     const verifiedVC = await verifyCredential(vcJwt, resolver)
     console.log(verifiedVC)
+
+    const verifiedPresentation = await verifyPresentation(vpJwt, resolver);
+    console.log(verifiedPresentation)
+
 }
 
 main().then(r => console.log("main ran: ", r));
